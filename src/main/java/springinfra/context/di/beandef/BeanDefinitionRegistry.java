@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BeanDefinitionRegistry {
     private final Map<String, BeanDefinition> beanDefinitions;
@@ -32,5 +33,12 @@ public class BeanDefinitionRegistry {
 
     public Set<BeanDefinition> getBeanDefinitions() {
         return new LinkedHashSet<>(beanDefinitions.values());
+    }
+
+    public <T extends BeanDefinition> Set<T> getBeanDefinitions(Class<T> beanDefinitionType) {
+        return beanDefinitions.values().stream()
+            .filter(beanDefinitionType::isInstance)
+            .map(beanDefinitionType::cast)
+            .collect(Collectors.toSet());
     }
 }

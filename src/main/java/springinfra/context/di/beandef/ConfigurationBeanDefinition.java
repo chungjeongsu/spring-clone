@@ -24,4 +24,9 @@ public class ConfigurationBeanDefinition implements BeanDefinition{
             throw new IllegalStateException("beanClass가 없습니다!");
         return beanClass;
     }
+
+    //만약, factory methods가 비지 않았으면, proxy로 enhance 해야함
+    public boolean hasFactoryMethods() {
+        return !factoryMethods.isEmpty();
+    }
 }
