@@ -1,39 +1,35 @@
 package springinfra.context.di.bdrpp;
 
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
+import springinfra.annotation.Bean;
 import springinfra.annotation.ComponentScan;
 import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.BeanDefinitionRegistry;
-import springinfra.context.di.beandef.ConfigurationBeanDefinition;
 
 public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPostProcessor{
 
     @Override
     public void postProcessorBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
-        Set<ConfigurationBeanDefinition> candidates ;
+        Set<BeanDefinition> configCandidates = findConfigBeanDefinition(registry);
 
-        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
-        for(ConfigurationBeanDefinition candidate : candidates) {
-                Class<?> configClass = candidate.getBeanClass();
-                if(configClass.isAnnotationPresent(ComponentScan.class)) {
-                    String[] packages = resolveBasePackage(configClass);
-                    scanner.scan(packages);
-                }
-
-                for(Method m : configClass.get)
-        }
-
-
+        ConfigurationClassParser parser = new ConfigurationClassParser(registry);
+        parser.parse(configCandidates);
     }
 
-    private void enhanceConfigurationBeanDefinitions(Set<ConfigClass> parsedConfigClasses, BeanDefinitionRegistry registry) {
-        for(ConfigClass configClass : parsedConfigClasses) {
-            String beanName = configClass.getBeanName();
-            BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
+    private Set<BeanDefinition> findConfigBeanDefinition(BeanDefinitionRegistry registry) {
+        return registry.getBeanDefinitions().stream()
+            .filter(beanDefinition -> {
+                Class<?> clazz = beanDefinition.getBeanClass();
+                if(clazz.isAnnotationPresent(ComponentScan.class)) return true;
+                return hasBeanAnnotation(clazz);
+            }).collect(Collectors.toSet());
+    }
 
-            if(beanDefinition instanceof ConfigurationBeanDefinition configurationBeanDefinition) {
-                configurationBeanDefinition.enhance(configClass);
-            }
-        }
+    private boolean hasBeanAnnotation(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredMethods()).anyMatch(
+                method -> method.isAnnotationPresent(Bean.class)
+            );
     }
 }

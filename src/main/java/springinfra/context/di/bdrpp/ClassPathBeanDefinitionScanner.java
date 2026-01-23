@@ -18,15 +18,20 @@ import springinfra.context.di.beandef.BeanDefinitionRegistry;
 public class ClassPathBeanDefinitionScanner {
     private final ClassLoader classLoader;
     private final BeanDefinitionRegistry beanDefinitionRegistry;
+    private final BeanNameGenerator beanNameGenerator;
 
     public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry beanDefinitionRegistry) {
         this.beanDefinitionRegistry = beanDefinitionRegistry;
+        this.beanNameGenerator = new BeanNameGenerator();
         this.classLoader = Thread.currentThread().getContextClassLoader();
     }
 
     public void scan(List<String> basePackages) {
         for(String basePackage : basePackages) {
-            Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+            Set<BeanDefinition> scannedBeanDefinitions = findCandidateComponents(basePackage);
+            for(BeanDefinition bd : scannedBeanDefinitions) {
+                beanDefinitionRegistry.registerBeanDefinition(bd.getBeanName(), bd);
+            }
         }
     }
 
@@ -45,7 +50,7 @@ public class ClassPathBeanDefinitionScanner {
 
             return beanDefinitions;
         } catch (IOException e) {
-            throw new BeanDefinitionScanException("basePackage 리소스 로딩 중 예외가 발생했습니다.", e);
+            throw new IllegalStateException("해당 패키지 스캔중 예외가 발생했습니다. : " + basePackage);
         }
     }
 
@@ -60,7 +65,7 @@ public class ClassPathBeanDefinitionScanner {
                 doScanJar(jarURLConnection, basePackage, beanDefinitions);
             }
         } catch (URISyntaxException | IOException e) {
-            throw new BeanDefinitionScanException("scan 준비 중 예외가 발생했습니다.", e);
+            throw new IllegalStateException("scan 준비 중 예외가 발생했습니다.", e);
         }
     }
 
@@ -69,7 +74,7 @@ public class ClassPathBeanDefinitionScanner {
         File[] files = file.listFiles();
 
         if(!file.isDirectory()) return;
-        if(files == null) throw new BeanDefinitionScanException("파일 시스템 파일 스캔 중 예외가 발생했습니다.");
+        if(files == null) throw new IllegalStateException("파일 시스템 파일 스캔 중 예외가 발생했습니다.");
 
         for(File child : files) {
             if(child.isDirectory()) {
@@ -86,11 +91,11 @@ public class ClassPathBeanDefinitionScanner {
             try {
                 Class<?> clazz = classLoader.loadClass(className);
 
-                BeanDefinition parsedBeanDefinition = beanDefinitionParser.parse(clazz);
-                if (parsedBeanDefinition != null)
-                    beanDefinitions.add(parsedBeanDefinition);
+                BeanDefinition newBeanDefinition = getNewBeanDefinition(clazz);
+                if (newBeanDefinition != null)
+                    beanDefinitions.add(newBeanDefinition);
             } catch (ClassNotFoundException e) {
-                throw new BeanDefinitionScanException("파일 시스템 파일 스캔 중 예외가 발생했습니다.", e);
+                throw new IllegalStateException("파일 시스템 파일 스캔 중 예외가 발생했습니다.", e);
             }
         }
     }
@@ -112,11 +117,15 @@ public class ClassPathBeanDefinitionScanner {
 
                 String className = name.substring(0, name.length() - 6).replace('/', '.');
                 Class<?> clazz = classLoader.loadClass(className);
-                BeanDefinition parsedBeanDefinition = beanDefinitionParser.parse(clazz);
-                if (parsedBeanDefinition != null) beanDefinitions.add(parsedBeanDefinition);
+                BeanDefinition newBeanDefinition = getNewBeanDefinition(clazz);
+                if (newBeanDefinition != null) beanDefinitions.add(newBeanDefinition);
             }
         } catch (IOException | ClassNotFoundException e) {
-            throw new BeanDefinitionScanException("jar 파일 스캔 중 예외가 발생했습니다.", e);
+            throw new IllegalStateException("jar 파일 스캔 중 예외가 발생했습니다.", e);
         }
+    }
+
+    private BeanDefinition getNewBeanDefinition(Class<?> clazz) {
+        return null;
     }
 }
