@@ -9,8 +9,10 @@ public class RootBeanDefinition implements BeanDefinition {
     private String beanName;
     private Class<?> beanClass;
 
-    public RootBeanDefinition(BeanDefinitionType beanDefinitionType) {
+    public RootBeanDefinition(BeanDefinitionType beanDefinitionType, String beanName, Class<?> beanClass) {
         this.beanDefinitionType = beanDefinitionType;
+        this.beanName = beanName;
+        this.beanClass = beanClass;
     }
 
     @Override
@@ -27,7 +29,7 @@ public class RootBeanDefinition implements BeanDefinition {
         return beanClass;
     }
 
-    enum BeanDefinitionType {
+    public enum BeanDefinitionType {
         INFRA, COMPONENT
     }
 }
