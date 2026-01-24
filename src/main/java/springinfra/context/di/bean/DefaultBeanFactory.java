@@ -2,10 +2,9 @@ package springinfra.context.di.bean;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.*;
 import java.util.stream.Collectors;
 import springinfra.annotation.Autowired;
 import springinfra.context.di.beandef.BeanDefinition;
@@ -80,6 +79,8 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
         Object beanInstance = createBean(beanName, beanDefinition);
 
+        singletonBeans.put(beanName, beanDefinition);
+
         afterSingletonCreation(beanName);
 
         return beanInstance;
@@ -104,13 +105,39 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
     private Object createBeanInstance(BeanDefinition beanDefinition) {
         if(beanDefinition instanceof MethodBeanDefinition methodBeanDefinition) {
-            return createMethodBeanInstance(methodBeanDefinition);
+            return createMethodBeanInstance(methodBeanDefinition);  //method 오버로드 시 터짐->오버로드 없게하기
         }
         return createClassBeanInstance(beanDefinition);
     }
 
     private Object createMethodBeanInstance(MethodBeanDefinition methodBeanDefinition) {
-        return null;
+        String factoryBeanName = methodBeanDefinition.getFactoryBeanName();
+        Object factoryBean = singletonBeans.get(factoryBeanName);
+        if(factoryBean == null) {
+            factoryBean = getBean(factoryBeanName);
+        }
+        String factoryMethodName = methodBeanDefinition.getFactoryMethod();
+        Method factoryMethod = findFactoryMethod(factoryBean.getClass(), factoryMethodName);
+        Object[] factoryMethodParameters = getFactoryMethodParameterBeans(factoryMethod);
+
+        try{
+            return factoryMethod.invoke(factoryBean, factoryMethodParameters);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new IllegalStateException("method bean 생성 중 예외 발생 : " + factoryBeanName);
+        }
+    }
+
+    private Object[] getFactoryMethodParameterBeans(Method factoryMethod) {
+        return Arrays.stream(factoryMethod.getParameters())
+                .map(parameter -> getBean(parameter.getType()))
+                .toArray();
+    }
+
+    private Method findFactoryMethod(Class<?> factoryBeanClass, String factoryMethodName) {
+        return Arrays.stream(factoryBeanClass.getDeclaredMethods())
+                .filter(method -> method.getName().equals(factoryMethodName))
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("해당 bean을 생성할 수 있는 FactoryMethod가 없습니다. : " + factoryMethodName));
     }
 
     private Object createClassBeanInstance(BeanDefinition beanDefinition) {

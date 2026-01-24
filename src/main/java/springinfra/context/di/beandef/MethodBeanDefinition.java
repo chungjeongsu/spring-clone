@@ -5,7 +5,7 @@ package springinfra.context.di.beandef;
  */
 public class MethodBeanDefinition implements BeanDefinition {
     private String beanName;
-    private Class<?> factoryClass;
+    private String factoryBeanName;
     private String factoryMethod;
     private Class<?> returnType;
 
@@ -18,8 +18,16 @@ public class MethodBeanDefinition implements BeanDefinition {
 
     @Override
     public Class<?> getBeanClass() {
-        if(factoryClass == null)
+        if(returnType == null)
             throw new IllegalStateException("beanClass가 없습니다!");
-        return factoryClass;
+        return returnType;
+    }
+
+    public String getFactoryBeanName() {
+        return factoryBeanName;
+    }
+
+    public String getFactoryMethod() {
+        return factoryMethod;
     }
 }
