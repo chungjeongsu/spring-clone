@@ -105,6 +105,26 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         return requireType.cast(getBean(candidateName));
     }
 
+    @Override
+    public <T> Map<String, T> getBeanMapOfType(Class<T> type) {
+        Map<String, T> typeBeans = new LinkedHashMap<>();
+        for(String beanName : typeIndex.get(type)) {
+            typeBeans.put(beanName, type.cast(getBean(beanName)));
+        }
+        if(typeBeans.isEmpty()) throw new IllegalStateException("해당 타입의 빈이 없습니다! : " + type.getName());
+        return typeBeans;
+    }
+
+    @Override
+    public <T> List<T> getBeanListOfType(Class<T> type) {
+        List<T> typeBeans = new ArrayList<>();
+        for(String beanName : typeIndex.get(type)) {
+            typeBeans.add(type.cast(getBean(beanName)));
+        }
+        if(typeBeans.isEmpty()) throw new IllegalStateException("해당 타입의 빈이 없습니다! : " + type.getName());
+        return typeBeans;
+    }
+
     private Object getBeanPipeLine(String beanName, BeanDefinition beanDefinition) {
         beforeSingletonCreation(beanName);
 

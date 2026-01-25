@@ -2,11 +2,14 @@ package springinfra.context.di;
 
 import static util.logger.Logger.log;
 
+import springinfra.context.di.bdrpp.BeanDefinitionRegistryPostProcessor;
 import springinfra.context.di.bdrpp.BeanNameGenerator;
 import springinfra.context.di.bdrpp.ConfigurationClassPostProcessor;
 import springinfra.context.di.bean.DefaultBeanFactory;
 import springinfra.context.di.beandef.RootBeanDefinition;
 import springinfra.context.di.beandef.RootBeanDefinition.BeanDefinitionType;
+
+import java.util.List;
 
 /**
  * 의존 주입의 역할을 맡는 컨텍스트이다.
@@ -80,7 +83,12 @@ public class DIContext {
     }
 
     private void invokeBeanFactoryPostProcessors() {
-
+        List<BeanDefinitionRegistryPostProcessor> bdrpps = beanFactory.getBeanListOfType(
+                BeanDefinitionRegistryPostProcessor.class
+        );
+        for(BeanDefinitionRegistryPostProcessor bdrpp : bdrpps) {
+            bdrpp.postProcessorBeanDefinitionRegistry(beanFactory);
+        }
     }
 
     private void registerBeanPostProcessors() {
