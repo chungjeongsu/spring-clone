@@ -3,7 +3,6 @@ package springinfra.context.di.bean;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
 import springinfra.annotation.Autowired;
@@ -15,11 +14,13 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private final Map<String, BeanDefinition> beanDefinitions;
     private final Map<String, Object> singletonBeans;
     private final Set<String> singletonsCurrentlyCreation;
+    private final Map<Class<?>, Set<String>> typeIndex; //인터페이스, 상속 구조
 
     public DefaultBeanFactory() {
         this.beanDefinitions = new LinkedHashMap<>(256);
         this.singletonBeans = new LinkedHashMap<>(256);
         this.singletonsCurrentlyCreation = new LinkedHashSet<>();
+        this.typeIndex = new LinkedHashMap<>();
     }
 
     //Bean Definition Registry=======================================
@@ -28,7 +29,34 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         if(beanDefinitions.containsKey(beanName)) {
             throw new IllegalStateException("동일한 이름의 빈이 이미 존재합니다. : " + beanName);
         }
+
         this.beanDefinitions.put(beanName, beanDefinition);
+
+        Set<Class<?>> superTypes = getSuperTypes(beanDefinition.getBeanClass());
+        for(Class<?> superType : superTypes) {
+            typeIndex.computeIfAbsent(superType, values -> new LinkedHashSet<>())
+                    .add(beanName);
+        }
+    }
+
+    private Set<Class<?>> getSuperTypes(Class<?> beanClass) {
+        Set<Class<?>> superTypes = new LinkedHashSet<>();
+
+        Class<?> curr = beanClass;
+        while(curr != Object.class && curr != null) {
+            superTypes.add(curr);
+            collectInterfaces(curr, superTypes);
+            curr = curr.getSuperclass();
+        }
+        return superTypes;
+    }
+
+    private void collectInterfaces(Class<?> curr, Set<Class<?>> superTypes) {
+        for(Class<?> itf : curr.getInterfaces()) {
+            if(superTypes.add(itf)) {
+                collectInterfaces(itf, superTypes);
+            }
+        }
     }
 
     @Override
@@ -69,9 +97,12 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         return getBeanPipeLine(beanName, beanDefinitions.get(beanName));
     }
 
+    //todo : 현재는 1번째 후보만 가져오고 있음. 추후에 qualifier 로직 추가 예정
     @Override
     public <T> T getBean(Class<T> requireType) {
-        return requireType.cast(getBean(requireType.getName()));
+        Set<String> candidateNames = typeIndex.get(requireType);
+        String candidateName = candidateNames.iterator().next();
+        return requireType.cast(getBean(candidateName));
     }
 
     private Object getBeanPipeLine(String beanName, BeanDefinition beanDefinition) {
@@ -79,7 +110,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
         Object beanInstance = createBean(beanName, beanDefinition);
 
-        singletonBeans.put(beanName, beanDefinition);
+        singletonBeans.put(beanName, beanInstance);
 
         afterSingletonCreation(beanName);
 

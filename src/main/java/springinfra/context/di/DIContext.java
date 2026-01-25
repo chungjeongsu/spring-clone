@@ -69,12 +69,9 @@ public class DIContext {
     }
 
     private void registerInfrastructureProcessors() {   //BDRPP 등록
-        String beanName = beanNameGenerator.generateBeanName(
-            ConfigurationClassPostProcessor.class, beanFactory
-        );
+        String beanName = beanNameGenerator.generateBeanName(ConfigurationClassPostProcessor.class, beanFactory);
         beanFactory.registerBeanDefinition(
-            beanName,
-            new RootBeanDefinition(
+            beanName, new RootBeanDefinition(
                 BeanDefinitionType.INFRA,
                 beanName,
                 ConfigurationClassPostProcessor.class
