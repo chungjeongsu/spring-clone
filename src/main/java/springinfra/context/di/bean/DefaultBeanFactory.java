@@ -142,6 +142,11 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         singletonBeans.put(beanName, beanInstance);
     }
 
+    @Override
+    public <T> BeanDefinition getBeanDefinition(T type) {
+        return getBeanDefinition(type.getClass().getName());
+    }
+
     private Object getBeanPipeLine(String beanName, BeanDefinition beanDefinition) {
         beforeSingletonCreation(beanName);
 
