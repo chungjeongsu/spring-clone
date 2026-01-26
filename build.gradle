@@ -5,3 +5,7 @@ plugins {
 repositories {
     mavenCentral()
 }
+
+dependencies {
+    implementation 'cglib:cglib:3.3.0'
+}
