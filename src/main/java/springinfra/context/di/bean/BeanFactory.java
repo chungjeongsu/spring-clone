@@ -2,6 +2,7 @@ package springinfra.context.di.bean;
 
 import java.util.List;
 import java.util.Map;
+import springinfra.context.di.beandef.BeanDefinition;
 
 public interface BeanFactory {
     Object getBean(String beanName);
@@ -11,4 +12,12 @@ public interface BeanFactory {
     <T> Map<String, T> getBeanMapOfType(Class<T> type);
 
     <T> List<T> getBeanListOfType(Class<T> type);
+
+    boolean hasBean(String beanName);
+
+    <T> boolean hasBean(Class<T> type);
+
+    void registerSingletonBean(String beanName, Object beanInstance);
+
+    <T> BeanDefinition getBeanDefinition(T type);
 }

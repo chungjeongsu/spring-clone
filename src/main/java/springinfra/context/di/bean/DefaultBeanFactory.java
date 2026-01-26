@@ -125,6 +125,23 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         return typeBeans;
     }
 
+    @Override
+    public <T> boolean hasBean(Class<T> type) {
+        return hasBean(type.getName());
+    }
+
+    @Override
+    public boolean hasBean(String beanName) {
+        return beanDefinitions.containsKey(beanName);
+    }
+
+    @Override
+    public void registerSingletonBean(String beanName, Object beanInstance) {
+        if(singletonBeans.containsKey(beanName))
+            throw new IllegalStateException("동일한 빈이 존재합니다. : " + beanName);
+        singletonBeans.put(beanName, beanInstance);
+    }
+
     private Object getBeanPipeLine(String beanName, BeanDefinition beanDefinition) {
         beforeSingletonCreation(beanName);
 

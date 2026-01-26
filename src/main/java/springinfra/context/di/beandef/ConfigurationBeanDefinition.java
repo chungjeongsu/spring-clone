@@ -29,4 +29,8 @@ public class ConfigurationBeanDefinition implements BeanDefinition{
     public boolean hasFactoryMethods() {
         return !factoryMethods.isEmpty();
     }
+
+    public void enhance(Class<?> proxyClass) {
+        this.beanClass = proxyClass;
+    }
 }

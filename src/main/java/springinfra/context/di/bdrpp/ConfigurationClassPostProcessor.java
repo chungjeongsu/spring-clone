@@ -5,15 +5,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import springinfra.annotation.Bean;
 import springinfra.annotation.ComponentScan;
+import springinfra.context.di.bean.BeanFactory;
 import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.BeanDefinitionRegistry;
 
 public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPostProcessor{
+    private final FactoryBeanEnhancer factoryBeanEnhancer;
+
+    public ConfigurationClassPostProcessor() {
+        this.factoryBeanEnhancer = new FactoryBeanEnhancer();
+    }
 
     @Override
     public void postProcessorBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
-        Set<BeanDefinition> configCandidates = findConfigBeanDefinition(registry);
+        registerAllBeanDefinitions(registry);
+    }
 
+    @Override
+    public void postProcessBeanFactory(BeanFactory beanFactory, BeanDefinitionRegistry registry) {
+        factoryBeanEnhancer.enhance(beanFactory, registry);
+    }
+
+    private void registerAllBeanDefinitions(BeanDefinitionRegistry registry) {
+        Set<BeanDefinition> configCandidates = findConfigBeanDefinition(registry);
         ConfigurationClassParser parser = new ConfigurationClassParser(registry);
         parser.parse(configCandidates);
     }

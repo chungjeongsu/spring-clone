@@ -3,6 +3,7 @@ package springinfra.context.di;
 import static util.logger.Logger.log;
 
 import springinfra.context.di.bdrpp.BeanDefinitionRegistryPostProcessor;
+import springinfra.context.di.bdrpp.BeanFactoryPostProcessor;
 import springinfra.context.di.bdrpp.BeanNameGenerator;
 import springinfra.context.di.bdrpp.ConfigurationClassPostProcessor;
 import springinfra.context.di.bean.DefaultBeanFactory;
@@ -72,22 +73,25 @@ public class DIContext {
     }
 
     private void registerInfrastructureProcessors() {   //BDRPP 등록
-        String beanName = beanNameGenerator.generateBeanName(ConfigurationClassPostProcessor.class, beanFactory);
-        beanFactory.registerBeanDefinition(
-            beanName, new RootBeanDefinition(
-                BeanDefinitionType.INFRA,
-                beanName,
-                ConfigurationClassPostProcessor.class
-            )
+        registerBasicBDRPPDefinition();
+        List<BeanDefinitionRegistryPostProcessor> bdrpps = beanFactory.getBeanListOfType(
+            BeanDefinitionRegistryPostProcessor.class
         );
     }
 
     private void invokeBeanFactoryPostProcessors() {
         List<BeanDefinitionRegistryPostProcessor> bdrpps = beanFactory.getBeanListOfType(
-                BeanDefinitionRegistryPostProcessor.class
-        );
+            BeanDefinitionRegistryPostProcessor.class);
+
         for(BeanDefinitionRegistryPostProcessor bdrpp : bdrpps) {
             bdrpp.postProcessorBeanDefinitionRegistry(beanFactory);
+        }
+
+        List<BeanFactoryPostProcessor> bfpps = beanFactory.getBeanListOfType(
+            BeanFactoryPostProcessor.class);
+
+        for(BeanFactoryPostProcessor bfpp : bfpps) {
+            bfpp.postProcessBeanFactory(beanFactory, beanFactory);
         }
     }
 
@@ -101,5 +105,16 @@ public class DIContext {
 
     private void finishRefresh() {
 
+    }
+
+    private void registerBasicBDRPPDefinition() {
+        String beanName = beanNameGenerator.generateBeanName(ConfigurationClassPostProcessor.class, beanFactory);
+        beanFactory.registerBeanDefinition(
+            beanName, new RootBeanDefinition(
+                BeanDefinitionType.INFRA,
+                beanName,
+                ConfigurationClassPostProcessor.class
+            )
+        );
     }
 }
