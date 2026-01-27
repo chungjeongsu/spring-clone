@@ -9,6 +9,13 @@ public class MethodBeanDefinition implements BeanDefinition {
     private String factoryMethod;
     private Class<?> returnType;
 
+    public MethodBeanDefinition(String beanName, String factoryBeanName, String factoryMethod, Class<?> returnType) {
+        this.beanName = beanName;
+        this.factoryBeanName = factoryBeanName;
+        this.factoryMethod = factoryMethod;
+        this.returnType = returnType;
+    }
+
     @Override
     public String getBeanName() {
         if(beanName.isBlank())

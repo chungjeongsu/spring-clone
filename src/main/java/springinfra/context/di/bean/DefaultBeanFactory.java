@@ -10,6 +10,7 @@ import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.BeanDefinitionRegistry;
 import springinfra.context.di.beandef.MethodBeanDefinition;
 import springinfra.context.di.bpp.BeanPostProcessor;
+import springinfra.context.di.exception.BeanDefinitionException;
 
 public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private final Map<String, BeanDefinition> beanDefinitions;
@@ -30,7 +31,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
         if(beanDefinitions.containsKey(beanName)) {
-            throw new IllegalStateException("동일한 이름의 빈이 이미 존재합니다. : " + beanName);
+            throw new BeanDefinitionException("동일한 이름의 빈 정의가 이미 존재합니다. : " + beanName);
         }
 
         this.beanDefinitions.put(beanName, beanDefinition);

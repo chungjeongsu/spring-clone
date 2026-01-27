@@ -1,22 +1,14 @@
 package springinfra.context.di.bdrpp;
 
-import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.BeanDefinitionRegistry;
 
+/**
+ * 해당 Bean의 타입을 받아, 빈의 이름을 생성해준다.
+ *
+ */
 public class BeanNameGenerator {
-    public String generateBeanName(BeanDefinition beanDefinition, BeanDefinitionRegistry beanDefinitionRegistry) {
-        Class<?> beanClass = beanDefinition.getBeanClass();
-        String beanName = beanClass.getName();
-
-        if(beanDefinitionRegistry.containsBeanDefinition(beanName)) {
-            throw new IllegalArgumentException("중복된 빈 이름이 존재합니다. : " + beanName);
-        }
-
-        return toCamelCase(beanName);
-    }
-
-    public String generateBeanName(Class<?> beanClass, BeanDefinitionRegistry beanDefinitionRegistry) {
-        String beanName = beanClass.getName();
+    public String generateBeanName(Class<?> beanType, BeanDefinitionRegistry beanDefinitionRegistry) {
+        String beanName = beanType.getName();
 
         if(beanDefinitionRegistry.containsBeanDefinition(beanName)) {
             throw new IllegalArgumentException("중복된 빈 이름이 존재합니다. : " + beanName);

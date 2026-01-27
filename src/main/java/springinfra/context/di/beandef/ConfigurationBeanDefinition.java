@@ -1,5 +1,8 @@
 package springinfra.context.di.beandef;
 
+import springinfra.annotation.Bean;
+
+import java.util.Arrays;
 import java.util.Set;
 
 /**
@@ -9,7 +12,11 @@ import java.util.Set;
 public class ConfigurationBeanDefinition implements BeanDefinition{
     private String beanName;
     private Class<?> beanClass;
-    private Set<String> factoryMethods;
+
+    public ConfigurationBeanDefinition(String beanName, Class<?> beanClass) {
+        this.beanName = beanName;
+        this.beanClass = beanClass;
+    }
 
     @Override
     public String getBeanName() {
@@ -27,7 +34,8 @@ public class ConfigurationBeanDefinition implements BeanDefinition{
 
     //만약, factory methods가 비지 않았으면, proxy로 enhance 해야함
     public boolean hasFactoryMethods() {
-        return !factoryMethods.isEmpty();
+        return Arrays.stream(beanClass.getDeclaredMethods())
+                .noneMatch(m -> m.isAnnotationPresent(Bean.class));
     }
 
     public void enhance(Class<?> proxyClass) {

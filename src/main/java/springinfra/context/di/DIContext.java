@@ -49,10 +49,7 @@ public class DIContext {
     private void registerAppBeanDefinition(Class<?> appClass) {
         String beanName = beanNameGenerator.generateBeanName(appClass, beanFactory);
         beanFactory.registerBeanDefinition(
-            beanName,
-            new RootBeanDefinition(
-                BeanDefinitionType.INFRA, beanName, appClass
-            )
+            beanName, new RootBeanDefinition(BeanDefinitionType.INFRA, beanName, appClass)
         );
     }
 
@@ -74,10 +71,18 @@ public class DIContext {
         log("DIContext 준비 시작");
     }
 
-    private void registerInfrastructureProcessors() {   //BDRPP 등록
+    /**
+     * BeanDefinitionRegisterPostProcessor의 BeanDefinition을 BeanFactory에 등록한다.
+     * - ConfigurationClassPostProcessor : 클래스 패스를 스캔하여, BeanDefinition을 등록하는 역할
+     */
+    private void registerInfrastructureProcessors() {
         registerBasicBDRPPDefinition();
     }
 
+    /**
+     *  등록된 BeanDefinitionRegisterPostProcessor를 실행한다.
+     *  - ConfigurationClassPostProcessor : 대부분의 빈의 BeanDefinition이 여기에서 등록된다.
+     */
     private void invokeBeanFactoryPostProcessors() {
         List<BeanDefinitionRegistryPostProcessor> bdrpps = beanFactory.getBeanListOfType(
             BeanDefinitionRegistryPostProcessor.class);
@@ -94,6 +99,11 @@ public class DIContext {
         }
     }
 
+    /**
+     * invokeBeanFactoryPostProcessors에서 등록된 BeanPostProcessor의 BeanDefinition들을 통해, BeanPostProcessor 빈을 등록한다.
+     * - BeanFactory 내부의 BeanPostProcessor만을 모아두는 List에 저장한다.
+     * - 후에 빈들을 생성할 때( createBean() ), BeanPostProcessor가 수행된다.
+     */
     private void registerBeanPostProcessors() {
         List<BeanPostProcessor> bpps = beanFactory.getBeanListOfType(BeanPostProcessor.class);
         for (BeanPostProcessor bpp : bpps) {
@@ -101,6 +111,9 @@ public class DIContext {
         }
     }
 
+    /**
+     * 모든 필요한 빈들을 생성한다.
+     */
     private void finishBeanFactoryInitialization() {
         for(BeanDefinition beanDefinition : beanFactory.getBeanDefinitions()) {
             if(beanDefinition instanceof RootBeanDefinition rbd) {

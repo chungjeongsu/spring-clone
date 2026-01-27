@@ -12,14 +12,14 @@ public class ConfigurationClassParser {
         this.scanner = new ClassPathBeanDefinitionScanner(registry);
     }
 
-    public void parse(Set<BeanDefinition> candidates) {
-        List<String> scanPackages = resolveScanPackages(candidates);
+    public void parse(Set<BeanDefinition> configBeanDefinitions) {
+        List<String> scanPackages = resolveScanPackages(configBeanDefinitions);
         scanner.scan(scanPackages);
     }
 
     private List<String> resolveScanPackages(Set<BeanDefinition> candidates) {
         return candidates.stream()
-            .map(candidate -> candidate.getBeanClass().getPackageName())
+            .map(bd -> bd.getBeanClass().getPackageName())
             .toList();
     }
 
