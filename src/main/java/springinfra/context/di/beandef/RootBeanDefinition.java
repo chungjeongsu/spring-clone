@@ -29,6 +29,10 @@ public class RootBeanDefinition implements BeanDefinition {
         return beanClass;
     }
 
+    public BeanDefinitionType getBeanDefinitionType() {
+        return beanDefinitionType;
+    }
+
     public enum BeanDefinitionType {
         INFRA, COMPONENT
     }

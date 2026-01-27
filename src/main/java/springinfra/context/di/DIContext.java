@@ -7,8 +7,10 @@ import springinfra.context.di.bdrpp.BeanFactoryPostProcessor;
 import springinfra.context.di.bdrpp.BeanNameGenerator;
 import springinfra.context.di.bdrpp.ConfigurationClassPostProcessor;
 import springinfra.context.di.bean.DefaultBeanFactory;
+import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.RootBeanDefinition;
 import springinfra.context.di.beandef.RootBeanDefinition.BeanDefinitionType;
+import springinfra.context.di.bpp.BeanPostProcessor;
 
 import java.util.List;
 
@@ -74,9 +76,6 @@ public class DIContext {
 
     private void registerInfrastructureProcessors() {   //BDRPP 등록
         registerBasicBDRPPDefinition();
-        List<BeanDefinitionRegistryPostProcessor> bdrpps = beanFactory.getBeanListOfType(
-            BeanDefinitionRegistryPostProcessor.class
-        );
     }
 
     private void invokeBeanFactoryPostProcessors() {
@@ -96,11 +95,19 @@ public class DIContext {
     }
 
     private void registerBeanPostProcessors() {
-
+        List<BeanPostProcessor> bpps = beanFactory.getBeanListOfType(BeanPostProcessor.class);
+        for (BeanPostProcessor bpp : bpps) {
+            beanFactory.addBeanPostProcessor(bpp);
+        }
     }
 
     private void finishBeanFactoryInitialization() {
-
+        for(BeanDefinition beanDefinition : beanFactory.getBeanDefinitions()) {
+            if(beanDefinition instanceof RootBeanDefinition rbd) {
+                if(rbd.getBeanDefinitionType() == BeanDefinitionType.INFRA) continue;
+            }
+            beanFactory.getBean(beanDefinition.getBeanName());
+        }
     }
 
     private void finishRefresh() {

@@ -9,18 +9,21 @@ import springinfra.annotation.Autowired;
 import springinfra.context.di.beandef.BeanDefinition;
 import springinfra.context.di.beandef.BeanDefinitionRegistry;
 import springinfra.context.di.beandef.MethodBeanDefinition;
+import springinfra.context.di.bpp.BeanPostProcessor;
 
 public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private final Map<String, BeanDefinition> beanDefinitions;
     private final Map<String, Object> singletonBeans;
     private final Set<String> singletonsCurrentlyCreation;
     private final Map<Class<?>, Set<String>> typeIndex; //인터페이스, 상속 구조
+    private final List<BeanPostProcessor> beanPostProcessors;
 
     public DefaultBeanFactory() {
         this.beanDefinitions = new LinkedHashMap<>(256);
         this.singletonBeans = new LinkedHashMap<>(256);
         this.singletonsCurrentlyCreation = new LinkedHashSet<>();
         this.typeIndex = new LinkedHashMap<>();
+        this.beanPostProcessors = new ArrayList<>();
     }
 
     //Bean Definition Registry=======================================
@@ -145,6 +148,10 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     @Override
     public <T> BeanDefinition getBeanDefinition(T type) {
         return getBeanDefinition(type.getClass().getName());
+    }
+
+    public void addBeanPostProcessor(BeanPostProcessor bpp) {
+        this.beanPostProcessors.add(bpp);
     }
 
     private Object getBeanPipeLine(String beanName, BeanDefinition beanDefinition) {
