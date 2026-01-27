@@ -53,9 +53,7 @@ public class DIContext {
 
     private void registerBeanPostProcessors() {
         List<BeanPostProcessor> bpps = beanFactory.getBeanListOfType(BeanPostProcessor.class);
-        for (BeanPostProcessor bpp : bpps) {
-            beanFactory.addBeanPostProcessor(bpp);
-        }
+        bpps.forEach(beanFactory::addBeanPostProcessor);
     }
 
     private void finishBeanFactoryInitialization() {
