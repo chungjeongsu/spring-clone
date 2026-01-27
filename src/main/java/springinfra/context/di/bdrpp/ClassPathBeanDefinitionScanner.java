@@ -46,7 +46,7 @@ public class ClassPathBeanDefinitionScanner {
     public void scan(List<String> basePackages) {
         for(String basePackage : basePackages) {
 
-            Set<BeanDefinition> scannedBeanDefinitions = findCandidateComponents(basePackage);
+            Set<BeanDefinition> scannedBeanDefinitions = findBeanDefinitions(basePackage);
 
             for(BeanDefinition bd : scannedBeanDefinitions) {
                 registry.registerBeanDefinition(bd.getBeanName(), bd);
@@ -54,9 +54,8 @@ public class ClassPathBeanDefinitionScanner {
         }
     }
 
-    private Set<BeanDefinition> findCandidateComponents(String basePackage) {
+    private Set<BeanDefinition> findBeanDefinitions(String basePackage) {
         Set<BeanDefinition> beanDefinitions = new LinkedHashSet<>();
-
         String basePackagePath = basePackage.replace('.', '/');
 
         try{
@@ -74,14 +73,17 @@ public class ClassPathBeanDefinitionScanner {
 
     private void doScan(URL url, String basePackage, Set<BeanDefinition> beanDefinitions) {
         try{
+
             if (url.getProtocol().equals("file")) {  //파일 시스템 파일 일 시
                 doScanFile(url.toURI(), basePackage, beanDefinitions);
                 return;
             }
+
             if(url.getProtocol().equals("jar")) {   //배포 jar일 시
                 JarURLConnection jarURLConnection = (JarURLConnection) url.openConnection();
                 doScanJar(jarURLConnection, basePackage, beanDefinitions);
             }
+
         } catch (URISyntaxException | IOException e) {
             throw new BeanScanException("URL을 읽어오는데 문제가 생겼습니다. : " + basePackage);
         }
