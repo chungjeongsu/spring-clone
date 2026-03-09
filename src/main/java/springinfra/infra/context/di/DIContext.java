@@ -1,16 +1,16 @@
-package springinfra.context.di;
+package springinfra.infra.context.di;
 
-import static util.logger.Logger.log;
+import static springinfra.util.logger.Logger.log;
 
-import springinfra.context.di.bdrpp.BeanDefinitionRegistryPostProcessor;
-import springinfra.context.di.bdrpp.BeanFactoryPostProcessor;
-import springinfra.context.di.bdrpp.BeanNameGenerator;
-import springinfra.context.di.bean.DefaultBeanFactory;
-import springinfra.context.di.beandef.BeanDefinition;
-import springinfra.context.di.beandef.RootBeanDefinition;
-import springinfra.context.di.beandef.RootBeanDefinition.BeanDefinitionType;
-import springinfra.context.di.bpp.BeanPostProcessor;
-import springinfra.context.di.util.AnnotationConfigUtils;
+import springinfra.infra.context.di.bdrpp.BeanDefinitionRegistryPostProcessor;
+import springinfra.infra.context.di.bdrpp.BeanFactoryPostProcessor;
+import springinfra.infra.context.di.bdrpp.BeanNameGenerator;
+import springinfra.infra.context.di.bean.DefaultBeanFactory;
+import springinfra.infra.context.di.beandef.BeanDefinition;
+import springinfra.infra.context.di.beandef.RootBeanDefinition;
+import springinfra.infra.context.di.beandef.RootBeanDefinition.BeanDefinitionType;
+import springinfra.infra.context.di.bpp.BeanPostProcessor;
+import springinfra.infra.context.di.util.AnnotationConfigUtils;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class DIContext {
         bdrpps.forEach(bdrpp -> bdrpp.postProcessBeanDefinitionRegistry(beanFactory));
 
         List<BeanFactoryPostProcessor> bfpps = beanFactory.getBeanListOfType(BeanFactoryPostProcessor.class);
-        bfpps.forEach(bfpp -> bfpp.postProcessBeanFactory(beanFactory, beanFactory));
+        bfpps.forEach(bfpp -> bfpp.postProcessBeanFactory(beanFactory));
     }
 
     private void registerBeanPostProcessors() {
@@ -67,5 +67,6 @@ public class DIContext {
 
     private void finishRefresh() {
         log("DIContext 끝");
+        log(beanFactory.toString());
     }
 }

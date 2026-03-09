@@ -1,8 +1,8 @@
-package springinfra.context.di.bean;
+package springinfra.infra.context.di.bean;
 
 import java.util.List;
 import java.util.Map;
-import springinfra.context.di.beandef.BeanDefinition;
+import springinfra.infra.context.di.beandef.BeanDefinition;
 
 public interface BeanFactory {
     Object getBean(String beanName);

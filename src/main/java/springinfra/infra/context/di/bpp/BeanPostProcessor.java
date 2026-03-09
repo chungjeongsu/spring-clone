@@ -1,4 +1,4 @@
-package springinfra.context.di.bpp;
+package springinfra.infra.context.di.bpp;
 
 public interface BeanPostProcessor {
     default Object postProcessBeforeInitialization(Object bean, String beanName) {
