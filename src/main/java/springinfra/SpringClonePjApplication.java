@@ -1,6 +1,7 @@
 package springinfra;
 
-import springinfra.annotation.SpringBootApplication;
+import springinfra.infra.SpringApplication;
+import springinfra.infra.annotation.bean.SpringBootApplication;
 
 @SpringBootApplication
 public class SpringClonePjApplication {
