@@ -27,7 +27,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private final Map<String, BeanDefinition> beanDefinitions;
     private final Map<String, Object> singletonBeans;
     private final Set<String> singletonsCurrentlyCreation;
-    private final Map<Class<?>, Set<String>> typeIndex; //?명꽣?섏씠?? ?곸냽 援ъ“
+    private final Map<Class<?>, Set<String>> typeIndex; // 타입별 빈 이름 인덱스
     private final Map<Class<?>, Set<Advice>> adviceIndex;
     private final List<BeanPostProcessor> beanPostProcessors;
 
@@ -45,7 +45,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
         if(beanDefinitions.containsKey(beanName)) {
-            throw new BeanDefinitionException("?숈씪???대쫫??鍮??뺤쓽媛 ?대? 議댁옱?⑸땲?? : " + beanName);
+            throw new BeanDefinitionException("동일한 이름의 빈 정의가 이미 존재합니다. : " + beanName);
         }
 
         this.beanDefinitions.put(beanName, beanDefinition);
@@ -85,7 +85,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
         if(!containsBeanDefinition(beanName)) {
-            throw new IllegalStateException("?대떦 BeanDefinition???놁뒿?덈떎. : " + beanName);
+            throw new IllegalStateException("해당 BeanDefinition이 없습니다. : " + beanName);
         }
         return beanDefinitions.get(beanName);
     }
@@ -110,20 +110,20 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
             return singletonBeans.get(beanName);
         }
         if(!beanDefinitions.containsKey(beanName)) {
-            throw new IllegalStateException("?대떦 Bean???놁뒿?덈떎. : " + beanName);
+            throw new IllegalStateException("해당 Bean이 없습니다. : " + beanName);
         }
         return getBeanPipeLine(beanName, beanDefinitions.get(beanName));
     }
 
-    //todo : ?꾩옱??1踰덉㎏ ?꾨낫留?媛?몄삤怨??덉쓬. 異뷀썑??qualifier 濡쒖쭅 異붽? ?덉젙
+    //todo : 현재는 1번째 후보만 가져오고 있음. 추후 qualifier 로직 추가 예정
     @Override
     public <T> T getBean(Class<T> requireType) {
         Set<String> candidateNames = resolveCandidateNames(requireType);
         if(candidateNames.isEmpty()) {
-            throw new BeanResolveException("?대떦 ??낆쓽 鍮덉씠 ?놁뒿?덈떎. : " + requireType.getName());
+            throw new BeanResolveException("해당 타입의 빈이 없습니다. : " + requireType.getName());
         }
         if(candidateNames.size() > 1) {
-            throw new BeanResolveException("?대떦 ??낆쓽 鍮덉씠 2媛??댁긽?낅땲?? : "
+            throw new BeanResolveException("해당 타입의 빈이 2개 이상입니다. : "
                     + requireType.getName() + ", candidates=" + candidateNames);
         }
         String candidateName = candidateNames.iterator().next();
@@ -138,7 +138,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
             typeBeans.put(beanName, type.cast(getBean(beanName)));
         }
         if(typeBeans.isEmpty()) {
-            throw new BeanResolveException("?대떦 ??낆쓽 鍮덉씠 ?놁뒿?덈떎. : " + type.getName());
+            throw new BeanResolveException("해당 타입의 빈이 없습니다. : " + type.getName());
         }
         return typeBeans;
     }
@@ -151,7 +151,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
             typeBeans.add(type.cast(getBean(beanName)));
         }
         if(typeBeans.isEmpty()) {
-            throw new BeanResolveException("?대떦 ??낆쓽 鍮덉씠 ?놁뒿?덈떎. : " + type.getName());
+            throw new BeanResolveException("해당 타입의 빈이 없습니다. : " + type.getName());
         }
         return typeBeans;
     }
@@ -201,7 +201,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
     private void beforeSingletonCreation(String beanName) {
         if(this.singletonsCurrentlyCreation.contains(beanName)) {
-            throw new IllegalStateException("?쒗솚 李몄“ 諛쒖깮!");
+            throw new IllegalStateException("순환 참조 발생!");
         }
         singletonsCurrentlyCreation.add(beanName);
     }
@@ -209,7 +209,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private Object createBean(String beanName, BeanDefinition beanDefinition) {
         Object beanInstance = createBeanInstance(beanDefinition);
 
-        //populateBean(beanName, beanDefinition); ==> setter 湲곕컲 ?섏〈二쇱엯 ??
+        //populateBean(beanName, beanDefinition); ==> setter 기반 의존주입 처리
         return initializeBean(beanName, beanInstance);
     }
 
@@ -257,10 +257,10 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         return result;
     }
 
-    //todo: 硫붿꽌??鍮??앹꽦 ?ㅻ쾭濡쒕뱶 由ы뙥?곕쭅 ?꾩슂
+    //todo: 메서드 빈 생성 오버로드 리팩토링 필요
     private Object createBeanInstance(BeanDefinition beanDefinition) {
         if(beanDefinition instanceof MethodBeanDefinition methodBeanDefinition) {
-            return createMethodBeanInstance(methodBeanDefinition);  //method ?ㅻ쾭濡쒕뱶 ???곗쭚->?ㅻ쾭濡쒕뱶 ?녾쾶?섍린
+            return createMethodBeanInstance(methodBeanDefinition);  //method 오버로드 문제 지점 -> 오버로드 좁히기
         }
         return createClassBeanInstance(beanDefinition);
     }
@@ -283,7 +283,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         try{
             return factoryMethod.invoke(factoryBean, factoryMethodParameters);
         } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new IllegalStateException("method bean ?앹꽦 以??덉쇅 諛쒖깮 : " + factoryBeanName);
+            throw new IllegalStateException("method bean 생성 중 예외 발생 : " + factoryBeanName);
         }
     }
 
@@ -297,7 +297,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         return Arrays.stream(factoryBeanClass.getDeclaredMethods())
                 .filter(method -> method.getName().equals(factoryMethodName))
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException("?대떦 bean???앹꽦?????덈뒗 FactoryMethod媛 ?놁뒿?덈떎. : " + factoryMethodName));
+                .orElseThrow(() -> new IllegalStateException("해당 bean을 생성하는 FactoryMethod가 없습니다. : " + factoryMethodName));
     }
 
     private Object createClassBeanInstance(BeanDefinition beanDefinition) {
@@ -308,7 +308,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
             constructorParameters = resolveParameters(autowirableConstructor);
             return autowirableConstructor.newInstance(constructorParameters);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            throw new IllegalStateException("鍮??앹꽦 ?덉쇅 諛쒖깮(異뷀썑 泥섎━)");
+            throw new IllegalStateException("빈 생성 예외 발생(추후 처리)");
         }
     }
 
@@ -326,7 +326,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         }
 
         if(noArgsConstructor == null) {
-            throw new IllegalStateException("?섏〈二쇱엯???ъ슜?????덈뒗 ?앹꽦?먮? 李얠쓣 ???놁뒿?덈떎.");
+            throw new IllegalStateException("의존주입에 사용할 수 있는 생성자를 찾을 수 없습니다.");
         }
         return noArgsConstructor;
     }
@@ -360,16 +360,16 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
     private Class<?> extractSingleGenericType(Type genericType, String containerType, Parameter parameter) {
         if(!(genericType instanceof ParameterizedType parameterizedType)) {
-            throw new BeanResolveException(containerType + " 二쇱엯? ?쒕꽕由???낆씠 ?꾩슂?⑸땲?? parameter=" + parameter.getName());
+            throw new BeanResolveException(containerType + " 주입은 제네릭 타입이 필요합니다. parameter=" + parameter.getName());
         }
 
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         if(actualTypeArguments.length != 1) {
-            throw new BeanResolveException(containerType + " ?쒕꽕由???낆씠 ?щ컮瑜댁? ?딆뒿?덈떎. parameter=" + parameter.getName());
+            throw new BeanResolveException(containerType + " 제네릭 타입이 올바르지 않습니다. parameter=" + parameter.getName());
         }
 
         if(!(actualTypeArguments[0] instanceof Class<?> parameterType)) {
-            throw new BeanResolveException(containerType + " ?쒕꽕由?? Class ??낆씠?댁빞 ?⑸땲?? parameter=" + parameter.getName());
+            throw new BeanResolveException(containerType + " 제네릭은 Class 타입이어야 합니다. parameter=" + parameter.getName());
         }
 
         return parameterType;
@@ -377,20 +377,20 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
     private Class<?> extractMapValueType(Type genericType, Parameter parameter) {
         if(!(genericType instanceof ParameterizedType parameterizedType)) {
-            throw new BeanResolveException("Map 二쇱엯? ?쒕꽕由???낆씠 ?꾩슂?⑸땲?? parameter=" + parameter.getName());
+            throw new BeanResolveException("Map 주입은 제네릭 타입이 필요합니다. parameter=" + parameter.getName());
         }
 
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         if(actualTypeArguments.length != 2) {
-            throw new BeanResolveException("Map ?쒕꽕由???낆씠 ?щ컮瑜댁? ?딆뒿?덈떎. parameter=" + parameter.getName());
+            throw new BeanResolveException("Map 제네릭 타입이 올바르지 않습니다. parameter=" + parameter.getName());
         }
 
         if(!(actualTypeArguments[0] instanceof Class<?> keyType) || !String.class.equals(keyType)) {
-            throw new BeanResolveException("Map 二쇱엯 key ??낆? String ?댁뼱???⑸땲?? parameter=" + parameter.getName());
+            throw new BeanResolveException("Map 주입 key 타입은 String 이어야 합니다. parameter=" + parameter.getName());
         }
 
         if(!(actualTypeArguments[1] instanceof Class<?> valueType)) {
-            throw new BeanResolveException("Map 二쇱엯 value ??낆? Class ??낆씠?댁빞 ?⑸땲?? parameter=" + parameter.getName());
+            throw new BeanResolveException("Map 주입 value 타입은 Class 타입이어야 합니다. parameter=" + parameter.getName());
         }
 
         return valueType;
@@ -406,7 +406,7 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
 
     private void afterSingletonCreation(String beanName) {
         if(!this.singletonsCurrentlyCreation.contains(beanName)) {
-            throw new IllegalStateException("鍮??앹꽦 以??????녿뒗 ?덉쇅 諛쒖깮(瑗ъ엫)");
+            throw new IllegalStateException("빈 생성 중 예상하지 못한 예외가 발생했습니다.");
         }
         singletonsCurrentlyCreation.remove(beanName);
     }
