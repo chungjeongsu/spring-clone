@@ -1,7 +1,25 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation 'cglib:cglib:3.3.0'
+}
+
+application {
+    mainClass = 'springinfra.SpringClonePjApplication'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs "-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Dsun.jnu.encoding=UTF-8",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
 }
