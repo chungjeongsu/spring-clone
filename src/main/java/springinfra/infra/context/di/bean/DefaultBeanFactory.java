@@ -28,7 +28,6 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
     private final Map<String, Object> singletonBeans;
     private final Set<String> singletonsCurrentlyCreation;
     private final Map<Class<?>, Set<String>> typeIndex; // 타입별 빈 이름 인덱스
-    private final Map<Class<?>, Set<Advice>> adviceIndex;
     private final List<BeanPostProcessor> beanPostProcessors;
 
     public DefaultBeanFactory() {
@@ -37,7 +36,6 @@ public class DefaultBeanFactory implements BeanDefinitionRegistry, BeanFactory {
         this.singletonsCurrentlyCreation = new LinkedHashSet<>();
         this.typeIndex = new LinkedHashMap<>();
         this.beanPostProcessors = new ArrayList<>();
-        this.adviceIndex = new LinkedHashMap<>();
         registerSingletonBean(INTERNAL_BEAN_FACTORY_NAME, this);
     }
 
